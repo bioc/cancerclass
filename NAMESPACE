@@ -1,0 +1,11 @@
+useDynLib(cancerclass)
+
+import(methods)
+importFrom(graphics, plot)
+importFrom(stats, summary.glm)
+importFrom(stats, predict)
+export(validate, nvalidate, fit, loo)
+export(.First.lib,.initFoo,get.d,get.d2,ilogit,calc.roc,calc.auc,get.ntrain,prepare,filter)
+exportClasses(validation,nvalidation,predictor,prediction)
+exportMethods(plot3d,summary,plot,predict) 
+ 
