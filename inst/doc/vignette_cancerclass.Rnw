@@ -1,0 +1,150 @@
+% \VignetteIndexEntry{Cancerclass: An R package for development and validation of diagnostic tests from high-dimensional molecular data}
+% \VignetteDepends{base, binom, Biobase, methods, stats}
+
+\documentclass[a4paper]{article}
+
+\title{Cancerclass: An R package for development and validation of diagnostic tests from high-dimensional molecular data}
+\author{Jan Budczies, Daniel Kosztyla}
+\date{\today}
+
+\begin{document}
+ 
+\maketitle
+
+\vspace{10cm}
+
+\tableofcontents
+
+\clearpage
+
+\section{Introduction}
+
+Progress in molecular high-throughput techniques has led to the opportunity of simultaneous monitoring of hundreds or thousands of biomolecules in medical samples, e.g. using microarrays. In the era of personalized medicine, these data form the basis for the development of prognostic and predictive tests. Because of the high dimensionality of the data and connected to the multiple testing problem, the development of molecular tests is sensitive to model overfitting and performance overestimation. Bioinformatic methods have been developed to cope with these problems, e.g. the multiple random validation protocol that was presented in \cite{michiels}.
+
+\textbf{Cancerclass} integrates methods for development and validation of diagnostic tests from high-dimensional molecular data. In the past, simple classifiers were shown to have a good performance on high-dimensional data compared to more sophisticated methods \cite{wessels}. Therefore, the protcol of \textbf{cancerclass} uses simple classification methods, while much attention is payed to validation and visualization of classification results. In short, the protocol starts with feature selection by a filtering step. Then, a predictor is constructed using the nearest-centroid method. The accuracy of the predictor can be evaluated using training and test set validation, leave-one-out cross-validation or in a multiple random validation protocol. Methods for calculation and visualization of continuous prediction score allow to balance sensitivity and specificity and define a cutoff value according to clinical requirements.
+
+In the following, the functionality of \textbf{cancerclass} is illustrated using two sets of cancer gene expression data. A gene expression data set of two types of leukemia (AML and AML) \cite{golub} is delivered with \textbf{cancerclass}. Gene expression data of breast cancer with good and poor prognosis \cite{veer, vijver} are obtained from the ExperimentData package \textbf{cancerdata}.
+
+\clearpage
+
+\section{Multiple random validation protocol}
+
+First, the package \textbf{cancerclass} and an example data set are loaded. GOLUB1 is a gene filtered version of gene expression data from 72 leukemia patients \cite{golub, michiels}.  
+
+<<>>=
+library(cancerclass)
+data(GOLUB1)
+GOLUB1
+@
+
+Using a protocol similar to \cite{michiels} we investigate the dependence of classification accuracy on the number of features (Fig.~\ref{fig:nvalidate}):
+
+<<results=hide>>=
+  nval <- nvalidate(GOLUB1[1:200, ], ngenes=c(5, 10, 20, 50, 100, 200))
+@
+
+\vspace{-0.5cm}
+
+\begin{figure}[hb!]
+  \centering  
+<<fig=TRUE, width=7.1, height=5>>=
+  plot(nval)
+@ 
+  \caption{Missclassification rates in dependence of the number of genes.}
+  \label{fig:nvalidate} 
+\end{figure}
+
+\clearpage
+
+The classification task is to distinguish between two types of leukemia, ALL and AML. Fig.~\ref{fig:nvalidate} shows the overall classification accuracy, the sensitivity for prediction of ALL and the sensitivity for prediction of AML. The confidence interval of the overall classification rate is estimated from 200 random splits in training and test sets.
+
+In order to reduce the computing time for the generation of the vignette, the gene expression data set has been reduced to the first 200 genes out of a total number of 3571 features. Classification rates will improve, when the calculation is done for the complete data set.
+
+Next, we evaluate the performance of 10-gene predictors on the size of the training set (Fig. \ref{fig:validate}):
+
+<<results=hide>>=
+  val <- validate(GOLUB1[1:200, ], ngenes=10, ntrain="balanced")
+@
+
+\vspace{-0.5cm}
+
+\begin{figure}[hb!]
+  \centering
+<<fig=TRUE, width=7.1, height=5>>=
+  plot(val)
+@ 
+  \caption{Missclassification rates for 10-gene predictors in dependence of the training set size. For each training set size, 200 splits in training and test sets were randomly drawn. Each training set contains an equal number of ALL and AML patients.}
+  \label{fig:validate} 
+\end{figure}
+
+\clearpage
+
+\section{Predictor construction and validation}
+
+Two gene expression data sets of breast cancer are loaded. Both data sets were generated using the same type of microarrays. VEER is the original data set of 78 breast cancer samples \cite{veer}. VIJVER is a larger data set of 295 breast cancer samples including some of the profiles of the original data set \cite{vijver}. An independent validation set VIJVER2 is obtained by removing the samples of VEER from VIJVER. A predictor of distance metastasis is fitted using the VEER data and validated in VIJVER2. Four methods  \texttt{dist = "euclidean", "center", "angle", "cor"} are available for calculation of the distance between test samples and the centroids (see documentation of predict-method).
+
+<<results=hide>>=
+library(cancerdata)
+data(VEER)
+data(VIJVER)
+VIJVER2 <- VIJVER[, setdiff(sampleNames(VIJVER), sampleNames(VEER))]
+predictor <- fit(VEER, method="welch.test")
+prediction <- predict(predictor, VIJVER2, positive="DM", dist="cor")
+@
+
+The result of the prediction is a continuous score for each of the breast cancer patients. Three methods  \texttt{score = "z", "zeta", "ratio"} are avaiable for calculation of the prediction score (see documentation prediction-class). The prediction score turns out to be significantly  increased for patients that developed a distance metastasis within 5 years after surgery (Fig.~\ref{fig:hist}). In fact, only three patients with prediction score zeta > 0.5 developed a distance metastasis.
+
+\begin{figure}[hb!]
+  \centering
+<<fig=TRUE, width=7.1, height=5>>=
+  plot(prediction, type="histogram", positive="DM", score="zeta")
+@
+  \caption{Histogram of the prediction score zeta patients that
+  developed a distance metastasis within the first 5 years (DM)
+  and patients that remained distance metastasis-free.}
+  \label{fig:hist} 
+\end{figure}
+
+\clearpage
+
+ROC analysis allows to trade off between sensitivity and specificity for the prediction of distant metastases. In fact, there is a cut off point for the prediction score yielding a sensitivity above 90\% at a specificity of about 50\% (Fig.~\ref{fig:roc}). Confidence intervals of sensitivity and specificity are calculated by the Wilson procedure. The ROC curve runs significanlty above the diagonal with an area under the curve (AUC) of 0.74.
+
+\begin{figure}[hb!]
+  \centering
+<<fig=TRUE, width=7.1, height=7.1>>=
+  plot(prediction, type="roc", positive="DM", score="zeta")
+@
+  \caption{ROC curve for the prediction of distance metastases. 
+  95\% confindence intervals for sensitivity (red lines) and 
+  specificity (green lines). AUC = area under the curve.}
+  \label{fig:roc} 
+\end{figure}
+
+\clearpage
+
+Finally, a logistic regression model is fitted to the prediction score. Using Fig.~\ref{fig:logistic}, the probability of developing a distant metastasis within 5 years can be estimated from the gene expression based prediction score.
+
+\begin{figure}[hb!]
+  \centering
+<<fig=TRUE, width=7.1, height=5>>=
+  plot(prediction, type="logistic", positive="DM", score="zeta")
+@
+  \caption{Probability of distance metastasis estimated in a
+   logistic regression model including 95\% confidence interval. 
+   Distribution of the patients with an unfavorable outcome (top track) 
+   and distribution of the patients with an favorable outcome 
+   (bottom track).}
+  \label{fig:logistic} 
+\end{figure}
+
+\clearpage
+
+\begin{thebibliography}{}
+  \bibitem{michiels} Michiels S, Koscielny S, Hill C: \textit{Prediction of cancer outcome with microarrays: a multiple random validation strategy.} Lancet 2005, 365:488-492.
+ \bibitem{wessels} Wessels LF, Reinders MJ, Hart AA, \textit{et al.}: \textit{A protocol for building and evaluating predictors of disease state based on microarray data.} Bioinformatics 2005, 21(19):3755-62.
+  \bibitem{golub} Golub TR, Slonim DK, Tamayo P, \textit{et al.}: \textit{Molecular classification of cancer: class discovery and class prediction by gene expression monitoring.} Science 1999, 286:531-537.
+  \bibitem{veer} van 't Veer LJ, Dai H, van de Vijver MJ, \textit{et al.}: \textit{Gene expression profiling predicts clinical outcome of breast cancer.} Nature 2002, 415:530-536.
+  \bibitem{vijver} van de Vijver MJ, He YD, van't Veer LJ, \textit{et al.}: \textit{A gene-expression signature as a predictor of survival in breast cancer.} N Engl J Med 2002, 347:1999-2009.
+\end{thebibliography}
+
+\end{document}
