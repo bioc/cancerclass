@@ -1,6 +1,6 @@
 Package: cancerclass
 Type: Package
-Version: 1.2.0
+Version: 1.2.1
 Date: 2011-10-26
 Title: Development and validation of diagnostic tests from
         high-dimensional molecular data
@@ -8,6 +8,7 @@ Author: Jan Budczies, Daniel Kosztyla
 Maintainer: Daniel Kosztyla <danielkossi@hotmail.com>
 Description: The classification protocol starts with a feature selection step and continues with nearest-centroid classification. The accurarcy of the predictor can be evaluated using training and test set validation, leave-one-out cross-validation or in a multiple random validation protocol. Methods for calculation and visualization of continuous prediction scores allow to balance sensitivity and specificity and define a cutoff value according to clinical requirements.
 Depends: R (>= 2.10.1), Biobase, binom, methods, stats
+Suggests: cancerdata
 License: GPL 3
 biocViews: Cancer, Microarray, Classification, Visualization
 Collate: validation-class.R nvalidation-class.R prediction-class.R
