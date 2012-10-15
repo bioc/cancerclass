@@ -33,4 +33,5 @@ void writedata(double *array, int size, char *filename);
 void writeheader(char *filename);
 
 int mini(double a, double b);
-void R_qsort(double *v, int i, int j);
+void R_qsort    (double *v,         size_t i, size_t j);
+
