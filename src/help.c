@@ -3,7 +3,7 @@
 #include <math.h>
 #include "help.h"
 #include "Rmath.h"
-#include <R_ext/Utils.h> /* R_qsort */
+
 #define SORTMAX 500
 
 

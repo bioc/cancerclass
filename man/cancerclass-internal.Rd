@@ -8,6 +8,7 @@
 \alias{get.prop}
 \alias{get.ntrain}
 \alias{prepare}
+\alias{get.lm}
 \alias{filter}
  
 

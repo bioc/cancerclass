@@ -51,6 +51,7 @@
   \item{col}{Only relevant if type="samples". Color of the boxes for samples of class1 and of class2. } 
   \item{ylim}{Range of the y-axis. } 
   \item{cex.names}{Only relevant if type="samples" or type="genes". Scaling factor for the labels of the x-axis. }
+  \item{col.curves}{Only relevant if type="xy". A vector of strings corresponding to curves. Specifies the colors of the plot curves. }
   \item{\dots}{Further arguments directly passed to \code{plot}. }
 }}
 

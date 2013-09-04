@@ -7,7 +7,7 @@ setMethod("plot", signature(x="validation", y="ANY"),
     function (x, y, type = "xy", method = names(x@misclass), 
         anno = "symbol", sig = c(0.95, NA, NA), xlog = FALSE, 
         pos = "topleft", ntrain = "all", min.percent = 5, n = nrow(x@nselected), 
-        col = c(grey(0.7), grey(0.3)), ylim = c(0, 100), cex.names = 0.5, 
+        col = c(grey(0.7), grey(0.3)), ylim = c(0, 100), cex.names = 0.5, col.curves=c("black", "red", "green"),
         ...) 
     {
         if (type == "genes") {
@@ -21,7 +21,7 @@ setMethod("plot", signature(x="validation", y="ANY"),
             X <- X[1:n]
             if (is.null(ylim)) ylim <- c(min(X), max(X))
             par(las = 2)
-            barplot(X, ylim = ylim, ylab = "predictors including gene (in %)", cex.names = cex.names, ...)
+            barplot(X, ylim = ylim, xlab="genes", ylab = "predictors including gene (in %)", cex.names = cex.names, ...)
         }
         if (type == "samples") {
             if (ntrain == "all") 
@@ -42,7 +42,7 @@ setMethod("plot", signature(x="validation", y="ANY"),
             if (is.null(ylim)) 
                 ylim <- c(min(X), max(X))
             par(las = 2)
-            barplot(X, ylim = ylim, ylab = "missclassifications (in %)", 
+            barplot(X, ylim = ylim, xlab="samples", ylab = "missclassifications (in %)", 
                 col = color, cex.names = cex.names, ...)
             legend("topleft", legend = classes, pch = 15, col = col, 
                 inset = 0.02)
@@ -56,7 +56,8 @@ setMethod("plot", signature(x="validation", y="ANY"),
             if (length(ix) <= 10) 
                 line.type = "b"
             else line.type = "l"
-            nmethod <- length(method)
+		col.curves=c("black", "red", "green")
+            nmethod <- length(method)		
             for (i in nmethod:1) {
                 name = method[i]
                 error = x@misclass[[name]]
@@ -83,26 +84,23 @@ setMethod("plot", signature(x="validation", y="ANY"),
                   lines(ix, q95, col = i, type = "l", lty = 3, 
                     lwd = 2)
                 }
-                lines(ix, m, col = i, type = line.type, lwd = 2)
+                lines(ix, m, col = col.curves[i], type = line.type, lwd = 2)
             }
             legend.text <- method
             if (nmethod == 1) {
                 if (!is.na(sig[1]) && sig[1] > 0) {
                   legend.text <- c(method, paste(legend.text, 
                     ", ", sig[1] * 100, "% CI", sep = ""))
-                  legend(pos, legend = legend.text, col = 1, 
-                    lty = c(1, 3), inset = 0.02, cex = 0.8)
+                  legend(pos, legend = legend.text, col = 1, lty = c(1, 3), inset = 0.02, cex = 0.8)
                 }
-                else legend(pos, lenged = legend.text, col = 1, 
-                  lty = 1, inset = 0.02, cex = 0.8)
+                else legend(pos, lenged = legend.text, col = 1, lty = 1, inset = 0.02, cex = 0.8)
             }
             else {
                 for (i in 1:nmethod) if (!is.na(sig[i]) && sig[i] > 
                   0) 
                   legend.text[i] <- paste(legend.text[i], " with ", 
                     sig[i] * 100, "% CI", sep = "")
-                legend(pos, legend = legend.text, col = 1:nmethod, 
-                  lty = 1, inset = 0.02, cex = 0.8)
+                legend(pos, legend = legend.text, col=col.curves, lty = 1, inset = 0.02, cex = 0.8)
             }
         }
     }

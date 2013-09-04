@@ -287,12 +287,10 @@ get.lm <- function(v, ngenes=10, dist="cor") {
     x2 <- x2 - mean(x2)
   }
   d <- x1 - x2
-  dnorm <- sqrt(sum(d^2))
-  d <- d / dnorm
-  x <- d
+  dnorm <- sum(d^2)
+  x <- -2/dnorm * d
   names(x) <- names(x1)
-  x["intercept"] <- - (sqrt(sum(x1^2)) - sqrt(sum(x2^2))) / dnorm
-  x <- -2 * x
+  x["intercept"] <- (sum(x1^2) - sum(x2^2)) / dnorm
   model <- ""
   for (g in names(x)) {
     if (g == "intercept") model <- paste(model, round(x[g], 2)) 
@@ -302,6 +300,8 @@ get.lm <- function(v, ngenes=10, dist="cor") {
   result <- list()
   result$x <- x
   result$model <- model
+  result$x1 <- x1
+  result$x2 <- x2
   return(result)
 }
 

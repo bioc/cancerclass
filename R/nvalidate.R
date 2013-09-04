@@ -2,11 +2,15 @@ nvalidate <- function (eset, class = "class", ngenes = c(5, 10, 20, 50, 100,
     200, 500, 1000), method = "welch.test", dist = "cor", ntrain = "balanced", 
     nrep = 200, hparam = 0.75) 
 {
+
+### prepare and preprocess data
     ngenes <- intersect(2:nrow(eset), ngenes)   
     eset = prepare(eset)
     fdata = pData(featureData(eset))
-    classifier = as.character(pData(eset)$class)
+    classifier = as.character(pData(eset)[, class])
     eset = exprs(eset)
+	
+### check parameters for validity
     FILTER=filter(method)   
     if (length(FILTER$fx) == 0) {
         message("Please select a correct method:\n", methods, "\n")
@@ -83,6 +87,8 @@ nvalidate <- function (eset, class = "class", ngenes = c(5, 10, 20, 50, 100,
         message("The dataset contains NA values! Please prepare dataset correctly.")
         return(0)
     }
+	
+### init result variables
     n1 <- ntrain[cl1]
     n2 <- ntrain[cl2]
     n <- n1 + n2
@@ -101,18 +107,24 @@ nvalidate <- function (eset, class = "class", ngenes = c(5, 10, 20, 50, 100,
     selection = matrix(0, nrow = ncol(data), ncol = length(geneix))
     all_genes = c(1:nrow(data))
     number_of_samples = nrow(data)
+	
+### multiple random validation protocol
     for (topgenes in geneix) {
         count = count + 1
         ideal = c(rep(-1, n), rep(1, n))
         message(count, " of ", length(geneix), " (top genes: ", topgenes, ")")
         genelist = rep(0, nrow(data))
+### for each random set/repeat
         for (j in 1:rep) {
             tmpstat = rep(0, nrow(data))
             tr.g = c(sample(ng1, n1), sample(ng2, n2))
             te.g = setdiff(c(ng1, ng2), tr.g)
             training = data[, tr.g]
             test = data[, te.g]
+
+### collect list of discriminating genes
             if (topgenes < number_of_samples) {
+### call C function for calculation of statistics and p-values
                 stat = .C("statistics", (FILTER$fx), as.double(as.matrix(t(training))), 
                   as.double(nrow(training)), as.double(n1), as.double(n2), 
                   as.double(hparam), result = vector(length = nrow(training), 
@@ -123,17 +135,20 @@ nvalidate <- function (eset, class = "class", ngenes = c(5, 10, 20, 50, 100,
             else {
                 best = all_genes
             }
-            genelist[best] = genelist[best] + 1
+            genelist[best] = genelist[best] + 1 	
             class1_samples = training[, 1:n1]
-            class2_samples = training[, (n1 + 1):n]            
-			class1_mean <- rowMeans(class1_samples[best, ])
-			class2_mean <- rowMeans(class2_samples[best, ])
+            class2_samples = training[, (n1 + 1):n]
+### calculate centroids for both classes            
+            class1_mean <- rowMeans(class1_samples[best, ])
+            class2_mean <- rowMeans(class2_samples[best, ])
             test_samples = test[best, ]
+### calculate distance of classes by the selected distance method
             class1 = get.d(test_samples, class1_mean, method = dist)
             class2 = get.d(test_samples, class2_mean, method = dist)
             tmp = class2 < class1
             class2_test = te.g[tmp]
             class1_test = te.g[!tmp]
+### calculate class prediction, calculate sensitivity and specificity			
             class1_real = setdiff(ng1, tr.g)
             class2_real = setdiff(ng2, tr.g)
             mean1 = 1 - (length(intersect(class1_real, class1_test))/(length(class1_real)))
@@ -143,15 +158,16 @@ nvalidate <- function (eset, class = "class", ngenes = c(5, 10, 20, 50, 100,
             values_mean[j, count] = mean_all
             values_class1[j, count] = mean1
             values_class2[j, count] = mean2
-            i_cl = c(intersect(class1_real, class1_test), intersect(class2_real, 
-                class2_test))
+            i_cl = c(intersect(class1_real, class1_test), intersect(class2_real, class2_test))
             i_real = c(class1_real, class2_real)
             misclass[i_cl, count] = misclass[i_cl, count] + 1
-            selection[i_real, count] = selection[i_real, count] + 
-                1
+            selection[i_real, count] = selection[i_real, count] + 1
         }
+### save list of discriminating genes
         sel_genelist[, count] = genelist
     }
+	
+### prepare result data (class nvalidation)
     misclass = 1 - (misclass/selection)
     colnames(misclass) = geneix
     colnames(values_mean) = geneix

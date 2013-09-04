@@ -4,13 +4,15 @@ if (!isGeneric("predict")) {
 }
 
 setMethod("predict", signature(object="predictor"),    
-  
   function(object, eset, positive="", class="class", ngenes = 50, dist = "cor", ...) 
   { 
+   
+### prepare data
     classifier = as.character(pData(eset)[,class])
     data = exprs(eset)
     predictor = object@predictor[1:ngenes, ]
 
+### check parameters for validity
     if (length(colnames(data)) == 0) {
         message("No colnames found in data matrix...")
         colnames(data) = 1:ncol(data)
@@ -47,11 +49,14 @@ setMethod("predict", signature(object="predictor"),
         message("The dataset contains NA values! Please prepare dataset correctly.")
         return(0)
     }
+	
+### calculate prediction
     message("Read and prepare data...")
     message("  Info (dataset): ", nrow(data),"x",ncol(data) )
     message("  #", cl1, "/#", cl2, ": ", length(ng1), "/", length(ng2), sep = "")
     message("\nStart analyse...")
     data_test = data[rownames(predictor), ]
+### calculate continuous prediction scores
     dist1 = get.d(data_test, predictor[, cl1], method = dist)
     dist2 = get.d(data_test, predictor[, cl2], method = dist)
     dist3 = get.d(predictor[, cl1], predictor[, cl2], method = dist)
@@ -62,6 +67,7 @@ setMethod("predict", signature(object="predictor"),
     e_cl2 = (length(intersect(tmp, ng2))/length(ng2))
     zeta = get.d2(data_test, predictor[, cl2], predictor[, cl1], method = dist)
     ratio = log2(dist1 / dist2)
+### calculate predicted class
     predicted_class = rep(cl2, length(classifier))
     predicted_class[tmp] = cl1
     predicted_class[tmp0] = NA
@@ -70,6 +76,7 @@ setMethod("predict", signature(object="predictor"),
     colnames(result) = c("class_membership", "class_predicted", "z", "zeta", "ratio")
     rownames(result) = colnames(data_test)
     
+### prepare result data (class prediction)
     prediction=new("prediction");
     slot(prediction,"prediction")=result        
     slot(prediction,"type")="traintest"
@@ -79,11 +86,7 @@ setMethod("predict", signature(object="predictor"),
     slot(prediction,"ngenes")=ngenes
     slot(prediction,"dist")=dist       
     slot(prediction,"positive")=cl2       
-    
     message("Finished!")
-    #return(result)
     return(prediction)
   }
 )
-
- 

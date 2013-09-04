@@ -41,6 +41,11 @@ Feature selection, classification and validation are for predictors that include
   Objects of this class have a method for the function \code{plot}.
 }
 
+\references{
+[1] Michiels S, Koscielny S, Hill C (2005), \emph{Prediction of cancer outcome
+with microarrays: a multiple random validation strategy}, Lancet 365:488-92. 
+}
+
 \seealso{
   \code{\linkS4class{nvalidation}} 
 }

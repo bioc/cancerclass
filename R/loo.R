@@ -1,7 +1,7 @@
 loo <- function (eset, class="class", method = "welch.test", ngenes=50, dist="cor", hparam = 0.75, positive="") 
 {  
   eset=prepare(eset);
-  classifier=as.character(pData(eset)$class)
+  classifier = as.character(pData(eset)[, class])
   #eset=exprs(eset) 
   #ix=order(classifier) # sortierung der für z.b. wilcoxon maximal wichtig
   #eset=eset[,ix]  
