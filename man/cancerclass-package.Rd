@@ -16,8 +16,8 @@ This package implements classification and validation methods for high-dimension
 \tabular{ll}{
 Package: \tab cancerclass\cr
 Type: \tab Package\cr
-Version: \tab 1.2.0 \cr
-Date: \tab 2013-07-01\cr
+Version: \tab 1.5.1 \cr
+Date: \tab 2013-09-04\cr
 License: \tab GPL (>=2)
 }}
 
